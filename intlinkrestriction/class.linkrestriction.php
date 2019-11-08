@@ -2,9 +2,9 @@
 
 class Linkrestriction {
 
-	private static $initiated = false;
+	private $initiated = false;
 
-	public static function init() {
+	public function init() {
 		if ( ! self::$initiated ) {
 			self::init_hooks();
 		}
@@ -13,18 +13,18 @@ class Linkrestriction {
 	/**
 	 * Initializes WordPress hooks
 	 */
-	private static function init_hooks() {
+	private function init_hooks() {
 		self::$initiated = true;
 
 		add_action( 'pre_post_update', array( 'Linkrestriction','intercept_publishing'), 10, 2 );
-		add_action( 'admin_notices',  array( 'Linkrestriction','my_plugin_notice') );
+		add_action( 'admin_notices', array( 'Linkrestriction','my_plugin_notice') );
 		add_action('admin_enqueue_scripts', array( 'Linkrestriction','my_enqueue'));
 
 		add_action( 'admin_init', array( 'Linkrestriction','linkrestriction_register_settings') );
 		add_action('admin_menu', array( 'Linkrestriction','register_options_page'));
 	}
 
-	public static function intercept_publishing($post_ID, $data){
+	public function intercept_publishing($post_ID, $data){
 		set_transient( 'intlinks_errors', array(array('message'=>'Not enough links')), 30 );
 		//add_filter( 'redirect_post_location', array( 'Linkrestriction', 'add_notice_query_var' ), 99 );
 		$post_content = $data['post_content'];
@@ -51,9 +51,9 @@ class Linkrestriction {
 		if ($cnti != -1 && $count < $cnti) {
 			wp_die( __('<b>Publishing Error: </b> Not enough internal images'), __('Publishing Error'), [ 'back_link' => true ] );
 		}
-    }
+  }
 
-	public static function my_enqueue($hook) {
+	public function my_enqueue($hook) {
 		wp_register_script( 'linkrestriction.js', plugin_dir_url( __FILE__ ) . '/script.js', array('jquery'), LINKRESTRICTION_VERSION );
 		wp_enqueue_script( 'linkrestriction.js' );
 		$cnti = get_option('linkrestr_img_count');
@@ -65,15 +65,15 @@ class Linkrestriction {
 			$cnt = -1;
 		}
 		$conf = array(
-		    'count' => $cnt,
-            'link_message' => __('Not enough internal links.'),
-            'image_count' => $cnti,
-		    'link_image_message' => __('Not enough internal images.')
-        );
+		  'count' => $cnt,
+      'link_message' => __('Not enough internal links.'),
+      'image_count' => $cnti,
+		  'link_image_message' => __('Not enough internal images.')
+    );
 		wp_localize_script( 'linkrestriction.js', 'conf', $conf );
 	}
 
-	public static function my_plugin_notice() {
+	public function my_plugin_notice() {
 		if ( ! ( $errors = get_transient( 'intlinks_errors' ) ) ) {
 			return;
 		}
@@ -89,7 +89,7 @@ class Linkrestriction {
 		delete_transient( 'intlinks_errors' );
 	}
 
-	public static function plugin_activation() {
+	public function plugin_activation() {
 		if ( version_compare( $GLOBALS['wp_version'], LINKRESTRICTION__MINIMUM_WP_VERSION, '<' ) ) {
 			load_plugin_textdomain( 'linkrestriction' );
 
@@ -99,7 +99,7 @@ class Linkrestriction {
 		}
 	}
 
-	private static function bail_on_activation( $message, $deactivate = true ) {
+	private function bail_on_activation( $message, $deactivate = true ) {
 		?>
 		<!doctype html>
 		<html>
@@ -126,7 +126,7 @@ class Linkrestriction {
 		if ( $deactivate ) {
 			$plugins = get_option( 'active_plugins' );
 			$linkrestrict = plugin_basename( LINKRESTRICTION__PLUGIN_DIR . 'intlinkrestriction.php' );
-			$update  = false;
+			$update = false;
 			foreach ( $plugins as $i => $plugin ) {
 				if ( $plugin === $linkrestrict ) {
 					$plugins[$i] = false;
@@ -141,42 +141,42 @@ class Linkrestriction {
 		exit;
 	}
 
-	public static function plugin_deactivation( ) {
+	public function plugin_deactivation( ) {
 
 	}
 
-	public static function linkrestriction_register_settings() {
+	public function linkrestriction_register_settings() {
 		add_option( 'myplugin_option_name', 'This is my option value.');
 		register_setting( 'linkrestr_options_group', 'linkrestr_count', 'linkrestr_callback' );
 		register_setting( 'linkrestr_options_group', 'linkrestr_img_count', 'linkrestr_callback' );
-    }
+  }
 
-	public static function register_options_page() {
+	public function register_options_page() {
 		add_options_page(__('Internal link restriction settings'), 'Link Restriction Menu', 'manage_options', 'linkrestriction', array( 'Linkrestriction','options_page'));
 	}
 
-	public static function options_page() {
+	public function options_page() {
 		?>
-        <div>
+    <div>
 			<?php screen_icon(); ?>
-            <h1><?php echo __('Internal link restriction settings'); ?></h1>
-            <form method="post" action="options.php">
+      <h1><?php echo __('Internal link restriction settings'); ?></h1>
+      <form method="post" action="options.php">
 				<?php settings_fields( 'linkrestr_options_group' ); ?>
-                <table class="form-table" role="presentation">
-                    <tbody>
-                        <tr valign="top">
-                            <th scope="row"><label for="linkrestr_count"><?php echo __('Internal link count'); ?></label></th>
-                            <td><input type="text" id="linkrestr_count" name="linkrestr_count" value="<?php echo get_option('linkrestr_count'); ?>" /></td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><label for="linkrestr_img_count"><?php echo __('Internal link image count'); ?></label></th>
-                            <td><input type="text" id="linkrestr_img_count" name="linkrestr_img_count" value="<?php echo get_option('linkrestr_img_count'); ?>" /></td>
-                        </tr>
-                    </tbody>
-                </table>
-				<?php  submit_button(); ?>
-            </form>
-        </div>
+        <table class="form-table" role="presentation">
+          <tbody>
+            <tr valign="top">
+              <th scope="row"><label for="linkrestr_count"><?php echo __('Internal link count'); ?></label></th>
+              <td><input type="text" id="linkrestr_count" name="linkrestr_count" value="<?php echo get_option('linkrestr_count'); ?>" /></td>
+            </tr>
+            <tr valign="top">
+              <th scope="row"><label for="linkrestr_img_count"><?php echo __('Internal link image count'); ?></label></th>
+              <td><input type="text" id="linkrestr_img_count" name="linkrestr_img_count" value="<?php echo get_option('linkrestr_img_count'); ?>" /></td>
+            </tr>
+          </tbody>
+        </table>
+				<?php submit_button(); ?>
+      </form>
+    </div>
 		<?php
-    }
+  }
 }
